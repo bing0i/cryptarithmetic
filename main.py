@@ -3,11 +3,36 @@ domains = {}
 variables = []
 
 
+def handleInput(lhsString):
+    words = []
+    wordsAndOperators = []
+    tmpWord = ""
+    for i in range(len(lhsString)):
+        if (
+            lhsString[i] != "+"
+            and lhsString[i] != "-"
+            and lhsString[i] != "*"
+            and lhsString[i] != "("
+            and lhsString[i] != ")"
+        ):
+            tmpWord += lhsString[i]
+        else:
+            if tmpWord != "":
+                words.append(tmpWord)
+                wordsAndOperators.append(tmpWord)
+            wordsAndOperators.append(lhsString[i])
+            tmpWord = ""
+    words.append(tmpWord)
+    wordsAndOperators.append(tmpWord)
+
+    return words, wordsAndOperators
+
+
 def readInputFile(path):
     data = {}
     with open(path, "r") as inputFile:
         firstLine = inputFile.readline()
-        data["LHS"] = firstLine.split("=")[0].split("+")
+        (data["LHS"], data["LHSAndOperators"]) = handleInput(firstLine.split("=")[0])
         data["RHS"] = firstLine.split("=")[-1]
     return data
 
@@ -54,27 +79,35 @@ def isSatisfied(assignedVariables):
 
     if len(assignedVariables) == len(variables):
         unit = 1
-        result = []
-        tmpSum = 0
+        lhsNumbers = []
+        tmpNumber = 0
+        tmpWord = ""
+        assignedWords = {}
         for index in range(len(data["LHS"])):
             for letter in reversed(data["LHS"][index]):
-                tmpSum += assignedVariables[letter] * unit
+                tmpNumber += assignedVariables[letter] * unit
+                tmpWord += letter
                 unit = unit * 10
-            result.append(tmpSum)
-            tmpSum = 0
+            lhsNumbers.append(tmpNumber)
+            assignedWords[tmpWord[::-1]] = tmpNumber
+            tmpNumber = 0
+            tmpWord = ""
             unit = 1
 
-        rhsSum = 0
+        rhsNumber = 0
         unit = 1
         for letter in reversed(data["RHS"]):
-            rhsSum += assignedVariables[letter] * unit
+            rhsNumber += assignedVariables[letter] * unit
             unit = unit * 10
 
-        lhsSum = 0
-        for index in range(len(result)):
-            lhsSum += result[index]
+        expression = data["LHSAndOperators"].copy()
+        for word in assignedWords.keys():
+            foundIndexes = [index for index, w in enumerate(expression) if word == w]
+            for i in foundIndexes:
+                expression[i] = str(assignedWords[word])
+        lhsResult = eval("".join(expression))
 
-        return lhsSum == rhsSum
+        return lhsResult == rhsNumber
 
     return True
 
@@ -98,7 +131,7 @@ def backtrack(assignedVariables):
 
 def sortResult(result):
     if result == None:
-        return "No solution"
+        return "NO SOLUTION"
     sortedKeys = sorted(result.keys())
     newResult = {}
     for key in sortedKeys:
