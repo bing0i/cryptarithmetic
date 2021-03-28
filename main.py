@@ -139,9 +139,15 @@ def sortResult(result):
     return newResult
 
 
-data = readInputFile("input.txt")
+import time
+
+start_time = time.time()
+
+data = readInputFile("input42.txt")
 variables = getVariables(data)
 domains = getDomains(variables)
 
 result = sortResult(backtrack({}))
-writeOutputFile("output.txt", result)
+writeOutputFile("output42.txt", result)
+
+print("--- %s seconds ---" % (time.time() - start_time))
